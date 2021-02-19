@@ -4,10 +4,6 @@ require "json"
 require "securerandom"
 
 class Memo
-  def create(title:, content:)
-    hash = { id: SecureRandom.uuid, title: title, content: content }
-    File.open("model/#{hash[:id]}.json", "w") { |file| file.puts JSON.pretty_generate(hash) }
-  end
   def find_by_id(id:)
     JSON.parse(File.read("model/#{id}.json"), symbolize_names: true)
   end
@@ -39,7 +35,7 @@ get "/memos/new" do
 end
 
 post "/memos/new" do
-  @memo = Memo.new.create(title: params[:memo_title], content: params[:memo_content])
+  @memo = Memo.new.edit(id: SecureRandom.uuid, title: params[:memo_title], content: params[:memo_content])
   redirect to("/memos")
 end
 
