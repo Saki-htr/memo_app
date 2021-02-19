@@ -11,5 +11,5 @@
 `gem install sinatra`
 1. リモートリポジトリをクローンする 
 `git clone  https://github.com/Saki-htr/memo_app.git`
-1. ターミナルで`sinatra_practice` に移動して、 `ruby app.rb`を実行する
+1. ターミナルで`memo_app` に移動して、 `ruby app.rb`を実行する
 1. ブラウザで`http://localhost:4567/memos`にアクセスする
