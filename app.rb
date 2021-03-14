@@ -1,18 +1,37 @@
+# frozen_string_literal: true
+
 require "sinatra"
 require "sinatra/reloader"
-require "json"
-require "securerandom"
+require "pg"
 
 class Memo
+  def initialize
+    @connection = PG.connect(dbname: "memos")
+  end
+
+  def create(title:, content:)
+    @connection.prepare("create", "INSERT INTO memos(title, content) VALUES ($1, $2)")
+    @connection.exec_prepared("create", [title, content])
+  end
+
+  def show_memos
+    @connection.prepare("show", "SELECT * FROM memos")
+    @connection.exec_prepared("show")
+  end
+
   def find_by_id(id:)
-    JSON.parse(File.read("model/#{id}.json"), symbolize_names: true)
+    @connection.prepare("find", "SELECT * FROM memos WHERE id = $1")
+    @connection.exec_prepared("find", [id])
   end
+
   def edit(id:, title:, content:)
-    hash = { id: id, title: title, content: content }
-    File.open("model/#{hash[:id]}.json", "w") { |file| file.puts JSON.pretty_generate(hash) }
+    @connection.prepare("edit", "UPDATE memos SET title = $1, content = $2 WHERE id = $3")
+    @connection.exec_prepared("edit", [title, content, id])
   end
+
   def delete(id:)
-    File.delete("model/#{id}.json")
+    @connection.prepare("delete", "DELETE FROM memos WHERE id = $1")
+    @connection.exec_prepared("delete", [id])
   end
 end
 
@@ -24,8 +43,7 @@ end
 
 get "/memos" do
   @title = "メモの一覧"
-  files = Dir.glob("model/*").sort_by { |file| File.mtime(file) }
-  @memos = files.map { |file| JSON.parse(File.read(file), symbolize_names: true) }
+  @memos = Memo.new.show_memos
   erb :list
 end
 
@@ -35,7 +53,7 @@ get "/memos/new" do
 end
 
 post "/memos/new" do
-  @memo = Memo.new.edit(id: SecureRandom.uuid, title: params[:memo_title], content: params[:memo_content])
+  @memo = Memo.new.create(title: params[:memo_title], content: params[:memo_content])
   redirect to("/memos")
 end
 
