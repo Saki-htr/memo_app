@@ -14,14 +14,13 @@ class Memo
     @connection.exec_prepared("create", [title, content])
   end
 
-  def show_memos
-    @connection.prepare("show", "SELECT * FROM memos")
-    @connection.exec_prepared("show")
+  def all
+    @connection.exec("SELECT * FROM memos")
   end
 
-  def find_by_id(id:)
+  def find(id:)
     @connection.prepare("find", "SELECT * FROM memos WHERE id = $1")
-    @connection.exec_prepared("find", [id])
+    @connection.exec_prepared("find", [id]) { |result| result[0] }
   end
 
   def edit(id:, title:, content:)
@@ -43,7 +42,7 @@ end
 
 get "/memos" do
   @title = "メモの一覧"
-  @memos = Memo.new.show_memos
+  @memos = Memo.new.all
   erb :list
 end
 
@@ -59,13 +58,13 @@ end
 
 get "/memos/:id" do
   @title = "メモの閲覧"
-  @memo = Memo.new.find_by_id(id: params[:id])
+  @memo = Memo.new.find(id: params[:id])
   erb :show
 end
 
 get "/memos/:id/edit" do
   @title = "メモの編集"
-  @memo = Memo.new.find_by_id(id: params[:id])
+  @memo = Memo.new.find(id: params[:id])
   erb :edit
 end
 
